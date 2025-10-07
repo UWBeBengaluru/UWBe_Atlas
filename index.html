@@ -1093,9 +1093,6 @@ function initMap(){
     window.addEventListener('orientationchange', positionNavForMobile);
     document.querySelector('#controls details')?.addEventListener('toggle', positionNavForMobile);
   
-
-
-
   window.addEventListener('resize', () => {
     // remove old and add fresh
     const ctrls = document.querySelector('.mapboxgl-ctrl-top-right, .mapboxgl-ctrl-bottom-right');
@@ -1183,15 +1180,6 @@ function initMap(){
           }
         }
       });
-
-      
-
-      // // BBMP boundary (union of zones)
-      // let bbmpUnion = null;
-      // store.geo.zones.features.forEach(f=>{ try{ bbmpUnion = bbmpUnion ? turf.union(bbmpUnion,f) : f; }catch(_){} });
-      // const bbmpFC = {type:'FeatureCollection',features: bbmpUnion?[bbmpUnion]:[]};
-      // map.addSource('bbmp',{type:'geojson',data:bbmpFC});
-      // map.addLayer({id:'bbmp-line',type:'line',source:'bbmp',paint:{'line-color':'#e11d48','line-width':3,'line-opacity':0.9}});
 
       // Wards (for spatial join)
       await getGeo('wards');
@@ -1331,45 +1319,6 @@ function initMap(){
   });
 }
 
-
-
-// function placeLegend(){
-//   const controls = document.getElementById('controls');
-//   const legend   = document.getElementById('legend');
-//   if (!controls || !legend) return;
-
-//   const isDesktop = window.matchMedia('(min-width: 769px)').matches;
-//   if (!isDesktop){
-//     // Let the mobile CSS position it; clear overrides
-//     legend.style.removeProperty('--legend-top');
-//     legend.style.removeProperty('--legend-maxh');
-//     return;
-//   }
-
-//   const GAP = 10; // px between cards
-//   const rect = controls.getBoundingClientRect();     // viewport coords
-//   const top  = Math.max(0, rect.bottom + GAP);       // px from viewport top
-
-//   // Set CSS vars used in the desktop rule above
-//   legend.style.setProperty('--legend-top',  top + 'px');
-
-//   // Keep the open legend body inside the viewport
-//   const maxh = Math.max(120, window.innerHeight - top - 12); // leave 12px bottom padding
-//   legend.style.setProperty('--legend-maxh', maxh + 'px');
-// }
-
-// // Recompute when layout can change
-// window.addEventListener('load', placeLegend);
-// window.addEventListener('resize', placeLegend);
-// window.addEventListener('orientationchange', placeLegend);
-
-// // If your Filters card uses <details>, recalc on toggle
-// document.querySelector('#controls details')?.addEventListener('toggle', placeLegend);
-// // And if the legend itself collapses/expands
-// document.getElementById('legendDetails')?.addEventListener('toggle', placeLegend);
-
-
-
 /* ---------- Boot ---------- */
 (async function start(){
   try{
@@ -1385,3 +1334,4 @@ function initMap(){
 </script>
 </body>
 </html>
+
