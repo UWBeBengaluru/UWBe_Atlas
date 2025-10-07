@@ -115,9 +115,25 @@
     .legend-line{ height:0; border-top:3px solid; width:30px; }
     .legend-dot{ width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid #fff; box-shadow:0 0 1px rgba(0,0,0,.6); }
     .legend-title{ font-weight:700; margin:2px 0 6px 0; font-size:13px; }
-    .legend-scroll{
-      margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb;
-      max-height: 28vh; overflow-y: auto;
+    #legend .legend-scroll {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e5e7eb;
+      max-height: 28vh;
+      overflow-y: auto;
+      scrollbar-width: thin; /* Firefox */
+    }
+     #legend details[open] #legendBody {
+        display: block;
+        margin-top: 8px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 6px rgba(0,0,0,.28);
+        padding: 10px 12px;
+        max-height: 40vh;
+        overflow-y: auto;    /* ✅ this ensures scroll inside the box */
+      }
+  
     }
 
     /* Collapsible legend shell */
@@ -305,6 +321,7 @@
         <div id="countLoc">Locations (filtered): <span class="num">–</span></div>
         <div id="countWells">Wells (filtered): <span class="num">–</span></div>
         <div id="narrative"></div>
+        <div id="hydroGain"></div>
       </div>
 
       <div id="err" class="error"></div>
@@ -389,6 +406,15 @@ function clearError(){const e=errEl(); e.textContent=''; e.style.display='none';
 const plural=(n,one,more)=>n===1?one:more;
 const norm=(str)=>String(str||'').trim().toLowerCase().replace(/\s+/g,' ');
 const ZONE_AUTO_ZOOM = 9.8;   // trigger zoom level
+// --- Hydrological gain constants ---
+const WELL_VOL_M3      = 4.27;     // storage per well when full (m³)
+const RUNOFF_DAYS_YR   = 30;       // based on last 30 years IMD (days with runoff)
+const LITERS_PER_M3    = 1000;
+const TANKER_LITERS    = 6000;     // typical BLR tanker size
+const LPCD             = 135;      // CPHEEO/CPCB urban norm (L/person/day)
+const PERSONS_PER_HH   = 4;        // Bengaluru average household size (approx)
+const HH_L_YEAR        = LPCD * PERSONS_PER_HH * 365; // liters/household/year
+
 
 /* Canonical FY from “Year of Completion” */
 function canonicalFY(raw){
@@ -496,7 +522,7 @@ function buildDonorStats(){
 }
 
 /* ---------- Legend & Summary ---------- */
-function renderLegend(){
+function renderLegend() {
   // Ensure collapsible shell exists once
   const host = document.getElementById('legend');
   if (host && !document.getElementById('legendDetails')) {
@@ -509,39 +535,29 @@ function renderLegend(){
   const body = document.getElementById('legendBody');
   if (!body) return;
 
-  // Helper
-  const vis = id => map && map.getLayer(id) && map.getLayoutProperty(id,'visibility')!=='none';
+  // Helper: is a layer visible?
+  const vis = id => map && map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none';
 
-  // Colors must match addHydrologyLayers()
+  // Watershed colors (must match addHydrologyLayers)
   const COLORS = {
-    ARKAVATHI: {label:'Arkavathi',               fill:'#f59e0b'},
-    VRISHABHAVATHI: {label:'Vrishabhavathi',     fill:'#10b981'},
-    HEBBAL: {label:'Hebbal',                      fill:'#3b82f6'},
-    KC: {label:'Koramangala–Challaghatta (KC)',  fill:'#ec4899'}
+    ARKAVATHI:      { label: 'Arkavathi',                      fill: '#f59e0b' },
+    VRISHABHAVATHI: { label: 'Vrishabhavathi',                 fill: '#10b981' },
+    HEBBAL:         { label: 'Hebbal',                         fill: '#3b82f6' },
+    KC:             { label: 'Koramangala–Challaghatta (KC)',  fill: '#ec4899' }
   };
 
-  // Admin rows only if visible
+  // Admin rows (only if their layers are currently visible)
   const adminHTML = `
     ${vis('blr-line')  ? '<div class="legend-item"><span class="legend-line" style="border-top-color:#1255d7"></span> Bengaluru Urban District</div>' : ''}
     ${vis('bbmp-line') ? '<div class="legend-item"><span class="legend-line" style="border-top-color:#e11d48"></span> BBMP Boundary</div>' : ''}
-    ${vis('zones-line') ? '<div class="legend-item"><span class="legend-line" style="border-top-color:#0e7490"></span> Zones</div>' : ''}
+    ${vis('zones-line')? '<div class="legend-item"><span class="legend-line" style="border-top-color:#0e7490"></span> Zones</div>' : ''}
     <div class="legend-item"><span class="legend-dot" style="background:#999"></span> Percolation well locations</div>
   `;
 
-  // Watersheds legend only when hydrology is on
-  let hydroHTML = '';
-  if (vis('hydro-watersheds-line')) {
-    hydroHTML = `
-      <div class="legend-title" style="margin-top:6px">Watersheds</div>
-      ${Object.entries(COLORS).map(([k,info]) =>
-        `<div class="legend-item"><span class="legend-dot" style="background:${info.fill}"></span> ${info.label}</div>`
-      ).join('')}
-    `;
-  }
-
   // Donors list (sorted)
-  const donorsSorted = [...(donorStats||new Map()).entries()].sort((a,b)=>(b[1]?.totalWells||0)-(a[1]?.totalWells||0));
-  const donorsHTML = donorsSorted.map(([name,st]) => `
+  const donorsSorted = [...(donorStats || new Map()).entries()]
+    .sort((a, b) => (b[1]?.totalWells || 0) - (a[1]?.totalWells || 0));
+  const donorsHTML = donorsSorted.map(([name, st]) => `
     <div class="legend-item" title="${name}">
       <span class="legend-dot" style="background:${st.color}"></span>
       <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
@@ -550,10 +566,11 @@ function renderLegend(){
 
   body.innerHTML = `
     ${adminHTML}
-    ${hydroHTML}
     <div class="legend-title" style="margin-top:6px">All donors</div>
-    <div class="legend-scroll">${donorsHTML}</div>`;
+    <div class="legend-scroll">${donorsHTML}</div>
+  `;
 }
+
 
 
 
@@ -563,6 +580,31 @@ function updateSummaryCard(){
   const zones = new Set(wellsFiltered.features.map(f=>f.properties._zoneName).filter(Boolean));
   const totalW = sumWells(wellsFiltered.features);
   const totalL = wellsFiltered.features.length;
+    // --- Hydrological gain (auto-updates with current filters) ---
+  const wellsCount = totalW; // wells_count is already summed into totalW
+  const annualM3   = wellsCount * WELL_VOL_M3 * RUNOFF_DAYS_YR;    // m³/year
+  const tankers    = annualM3 / (TANKER_LITERS / LITERS_PER_M3);   // m³ / 6
+  const households = (annualM3 * LITERS_PER_M3) / HH_L_YEAR;       // hh/year
+
+  const fmt = n => Math.round(n).toLocaleString('en-IN');
+
+  const hydroEl = document.getElementById('hydroGain');
+  if (hydroEl){
+    hydroEl.innerHTML = `
+      <br> <!-- adds a small space before the section -->
+      🌿 <strong>Environmental Impact:</strong>
+      The supported wells can capture about
+      <span class="num">${fmt(annualM3)}</span> m³ of rainwater each year —
+      roughly <span class="num">${fmt(tankers)}</span> water tankers (6,000 L each),
+      or the annual water needs of ~<span class="num">${fmt(households)}</span> households
+      (135 LPCD) in Bengaluru.
+      <br><span class="muted">
+        Note: 30 runoff days/year based on last 30 years of IMD rainfall data
+        and per-well storage of 4.27 m³ is considered for calculation.
+      </span>
+    `;
+  }
+
 
   document.getElementById('countLoc').innerHTML   = `Locations : <span class="num">${totalL}</span>`;
   document.getElementById('countWells').innerHTML = `Wells : <span class="num">${totalW}</span>`;
@@ -1160,8 +1202,11 @@ function initMap(){
       // Hydrology toggle (correct wiring)
       const hydroToggleEl = document.getElementById('hydroToggle');
       if (hydroToggleEl) {
-        hydroToggleEl.addEventListener('change', () => setHydrologyVisible(hydroToggleEl.checked));
-      }
+        hydroToggleEl.addEventListener('change', () => {
+          setHydrologyVisible(hydroToggleEl.checked);
+          renderLegend(); // OK if this duplicates; it’s cheap
+        });
+      } 
 
       // Zone lookups
       (function buildZoneLookups(){
