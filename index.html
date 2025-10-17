@@ -12,18 +12,29 @@
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
   <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- 1) Load Palanquin once in <head> -->
+  <link href="https://fonts.googleapis.com/css2?family=Palanquin:wght@400;600;700&display=swap" rel="stylesheet">
+
 
   <style>
     :root { --header-h: 64px; --vh: 100vh; }
     html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
+    :root{
+    --ui-font: "Palanquin", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    html, body { font-family: var(--ui-font); }
+
+    .mapboxgl-ctrl, .mapboxgl-ctrl * {
+      font-family: var(--ui-font) !important;
+    }
   
     .header-panel {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
       display: flex; justify-content: space-between; align-items: center;  height: var(--header-h);
       background: #fff; padding: 10px 30px; border-bottom: 2px solid #eee; box-sizing: border-box;
       box-shadow: 0 2px 8px rgba(0,0,0,.06);
-      font-family: 'Georgia', serif; font-size: 16px;
+      font-family: 'Antonio Bold'; font-size: 16px;
     }
     .header-panel .logo img { height: 52px; }
     .header-panel .title { text-align: center; flex: 1; }
@@ -48,7 +59,7 @@
       position: absolute; top: calc(var(--header-h)); left: 12px;
       width: 300px; z-index: 900; background: #fff; border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,.15); padding: 14px;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size: 14px;
+      font-family: Palanquin; font-size: 14px;
     }
     #controls label { display:block; font-weight:700; margin: 6px 0 4px; font-size: 14px; }
     #controls select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; }
@@ -61,7 +72,7 @@
       #legend .legend-summary,
       #legend #legendBody,
       #legend .legend-item {
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-family: Palanquin;
         font-size: 14px; /* matches #controls */
       }
 
@@ -1334,4 +1345,5 @@ function initMap(){
 </script>
 </body>
 </html>
+
 
