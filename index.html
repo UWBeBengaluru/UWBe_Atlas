@@ -15,7 +15,6 @@
   <!-- 1) Load Palanquin once in <head> -->
   <link href="https://fonts.googleapis.com/css2?family=Palanquin:wght@400;600;700&display=swap" rel="stylesheet">
 
-
   <style>
     :root { --header-h: 64px; --vh: 100vh; }
     html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
@@ -28,6 +27,8 @@
     .mapboxgl-ctrl, .mapboxgl-ctrl * {
       font-family: var(--ui-font) !important;
     }
+
+    .mapboxgl-popup * { font-family: "Palanquin"; }
   
     .header-panel {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
@@ -51,9 +52,7 @@
       margin: 0;              /* remove the old margin-top */
       height: auto;           /* not needed when fixed */
     }
-
-    
-
+  
     /* Filters card (top-left) */
     #controls {
       position: absolute; top: calc(var(--header-h)); left: 12px;
@@ -66,94 +65,122 @@
     .muted { color:#6b7280; font-size:12px; }
     .row { display: grid; gap: 8px; margin-top: 8px; }
     .error { background:#fee2e2; border:1px solid #fca5a5; color:#7f1d1d; padding:10px; border-radius:8px; font-size:13px; display:none; margin-top:8px; }
-
+    #controls select {
+        font-family: "Palanquin", sans-serif !important;
+        font-weight: 400;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: #fff;
+        line-height: 1.3;
+        padding-right: 28px;
+    }
+    
     /* Make Legend use the same UI font as Filters */
       #legend,
       #legend .legend-summary,
       #legend #legendBody,
       #legend .legend-item {
         font-family: Palanquin;
-        font-size: 14px; /* matches #controls */
+        font-size: 13px; /* matches #controls */
+      }
+
+      /* Optional: ensure details doesn’t override it */
+      #legend details {
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
       }
 
       /* Match the Filters summary header look */
-      #legend .legend-summary {
-        font-weight: 700;
-        /* optional: same padding as your Filters summary */
-        padding: 10px 12px;
+      .legend-summary{
+        cursor:pointer;
+        font-weight:700;
+        margin-bottom:8px;         /* matches your Filters header spacing */
+        font-family:"Palanquin", sans-serif;  /* keeps fonts consistent */
       }
+
+      /* Show/hide body on open/close */
+      #legend details[open] .legend-body{ display:block; }
+      #legend details:not([open]) .legend-body{ display:none; }
+
+      /* If you want to ensure the marker is black (some browsers) */
+      #legend summary::marker{ color:#000; }
+      /* chromium/webkit tweak */
+      #legend summary::-webkit-details-marker{ color:#000; }
 
     /* Desktop: put Legend at bottom-right */
     @media (min-width: 769px){
       #legend{
-        position: fixed;
+        position: absolute; 
         right: 12px;      /* was left: 12px */
         bottom: 12px;
         left: auto;       /* ensure it doesn’t stick to the left */
         top: auto;
-        width: 300px;
+        width: 250px;
         z-index: 903;
-        background: transparent;
-        box-shadow: none;
-      }
-      /* #legend details[open] #legendBody{
-        max-height: 40vh;  overflow: auto;  /* keeps internal scroll if tall */
-        
-      /* } */ 
-    }
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        padding: 10px 14px;
+        max-height: 68vh;
+        overflow: hidden;
+        font-family: "Palanquin", sans-serif;
+        }
 
+    }
 
     /* Reusable card */
     .card {
       background:#fff; padding:10px 12px; border-radius:10px;
-      box-shadow:0 1px 4px rgba(0,0,0,.25); font-size:13px; line-height:1.4;
+      box-shadow:0 1px 4px rgba(0,0,0,.25); font-size:12px; line-height:1.4;
     }
     .card strong, .card .num { font-weight:700; }
 
     /* Summary card */
     #summaryCard { margin-top: 10px; }
 
-    /* Legend: bottom-left with inner scroll for donors
-    #legend{
-      position:fixed; left:12px;bottom:12px; top: auto;
-      width: 300px;  z-index: 903;       
-      box-shadow: none; /* the open card gets its own shadow */
-      /* background: transparent; */
-    /* } */ 
     #legend { margin-left: 0; }            /* anchored left already */
     #legend .panel-summary { margin-bottom: 8px; }
     .legend-item{ display:flex; align-items:center; gap:8px; margin:4px 0; }
     .legend-line{ height:0; border-top:3px solid; width:30px; }
-    .legend-dot{ width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid #fff; box-shadow:0 0 1px rgba(0,0,0,.6); }
-    .legend-title{ font-weight:700; margin:2px 0 6px 0; font-size:13px; }
+    .legend-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid #fff; box-shadow:0 0 1px rgba(0,0,0,.6); }
+    .legend-title{ font-weight:700; margin:2px 0 6px 0; font-size:12px; }
     #legend .legend-scroll {
+      min-height: 0;
       margin-top: 8px;
-      padding-top: 8px;
+      padding: 8px 8px 12px 8px;
       border-top: 1px solid #e5e7eb;
-      max-height: 28vh;
+      max-height: 20vh;
       overflow-y: auto;
       scrollbar-width: thin; /* Firefox */
+      scrollbar-gutter: stable;
     }
      #legend details[open] #legendBody {
-        display: block;
-        margin-top: 8px;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 1px 6px rgba(0,0,0,.28);
-        padding: 10px 12px;
-        max-height: 40vh;
-        overflow-y: auto;    /* ✅ this ensures scroll inside the box */
+        display:flex;              /* column layout */
+        flex-direction: column;
+        gap:8px;
+        background:#fff;
+        border-radius:10px;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+        padding:8px 10px;
+        box-sizing:border-box;
+
+        /* The body takes the available space inside the card and stops */
+        max-height: calc(68vh - 56px);  /* 56px ~= header + paddings; adjust if needed */
+        overflow:visible;
+      }
+
+      .legend-dot-group {
+      display: flex;
+      gap: 3px;             /* smaller space between dots */
+      align-items: center;
       }
   
-    }
-
     /* Collapsible legend shell */
-    #legend details { display:block; margin:0; }
-    #legend .legend-summary {
-      cursor: pointer;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
+    #legend details{ margin:0; padding:0; border:0; background:transparent; }
+    .legend-summary{ cursor:pointer; font-weight:700; margin-bottom:6px; }
     #legend .legend-summary::-webkit-details-marker { display: none; }
 
     /* When expanded, show the body as a card above the summary */
@@ -165,7 +192,7 @@
       box-shadow: 0 1px 6px rgba(0,0,0,.28);
       padding: 10px 12px;
       max-height: 40vh;         /* grows upward */
-      /* overflow: auto;           scroll inside card if tall */
+      /* overflow: visible;           scroll inside card if tall */
     }
 
     /* This line actually collapses the content so the card shrinks */
@@ -197,13 +224,50 @@
         background: #fff;
       
       }
-
      
+/* Keep arrow adjustment only for small screens */
+@media (max-width: 768px) {
+  #legend summary::-webkit-details-marker { display: none; }
+  #legend summary::marker { content: ""; }
+
+    #legend .legend-summary {
+      position: relative;
+      padding: 10px 12px 10px 22px; /* space for arrow */
+    }
+
+      #legend .legend-summary::before {
+        content: "▼";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%) rotate(-90deg);
+        font-size: 12px;
+        color: #111;
+        pointer-events: none;
+      }
+
+      #legend details[open] .legend-summary::before {
+        transform: translateY(-50%) rotate(0deg);
+      }
+    }     
 
       /* Bigger tap targets; prevents iOS zoom on focus */
       #controls select,
-      #controls label { font-size: 16px; }
-      #controls select { padding: 10px 12px; }
+      #controls label { font-size: 12px; }
+      #controls select { padding: 8px 10px; }
+      #controls option {
+      font-family: "Palanquin", sans-serif !important;
+      font-weight: 400;
+      color: #111;
+      letter-spacing: 0.2px;
+      }
+
+      #controls select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: #fff;
+      }
 
       /* Keep Mapbox controls clear of the home-indicator */
       /* mobile: push nav up by --nav-offset plus safe-area */
@@ -230,15 +294,20 @@
         box-shadow: 0 2px 10px rgba(0,0,0,.15);
         background: #fff;
       }
-
-      
+  
 
       /* shorter donor list on phones */
-      #legend .legend-scroll{ max-height: 20vh; }
+      #legend .legend-scroll{
+        flex: 1 1 auto;           /* take remaining height inside legendBody */
+        min-height: 0;            /* required for flex children to actually shrink */
+        overflow-y: auto;         /* the only scrollbar */
+        margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb;
+        padding-right: 6px;       /* room for scrollbar so text doesn’t clip */
+        scrollbar-width: thin;    /* Firefox */
+      }
 
       /* smoother touch-drag on iOS */
       .mapboxgl-canvas { touch-action: pan-x pan-y; }
-    
     }
     /* Collapsible card look (shared) */
     .panel-summary{
@@ -261,9 +330,6 @@
       padding:10px 12px;
     }
  
-
-
-
   </style>
 
   <script>
@@ -295,7 +361,6 @@
     if (legendDetails) legendDetails.addEventListener('toggle', placeLegend);
   
   </script>
-
 
 </head>
 <body>
@@ -339,15 +404,14 @@
     </details>
   </div>
 
-
   <div id="map"></div>
-  <div id="legend">
-    <details id="legendDetails" class="card panel">
-      <summary class="panel-summary">Legend</summary>
-      <div id="legendBody" class="panel-body"></div>
+  <div id="legend" class="legend-card">
+    <details>
+      <summary class="legend-summary">Legend</summary>
+      <div id="legendBody" class="legend-body"></div>
     </details>
   </div>
-  <div id="inset" aria-hidden="true"></div>
+  <!-- <div id="inset" aria-hidden="true"></div> -->
 
 <script>
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2h1c2hidWtiIiwiYSI6ImNtYW9zcjQxaTBhcXcyaXB2ZXc0YTVrNmYifQ.uujp1Y7b8fCTgt9nvddvzA';
@@ -399,7 +463,6 @@ async function addBBMPBoundary() {
   }
 }
 
-
 /* ---------- State ---------- */
 const store = { geo:{}, bbmp:{}, ui:{ zonesShown:false } };
 let map, inset;
@@ -425,7 +488,6 @@ const TANKER_LITERS    = 6000;     // typical BLR tanker size
 const LPCD             = 135;      // CPHEEO/CPCB urban norm (L/person/day)
 const PERSONS_PER_HH   = 4;        // Bengaluru average household size (approx)
 const HH_L_YEAR        = LPCD * PERSONS_PER_HH * 365; // liters/household/year
-
 
 /* Canonical FY from “Year of Completion” */
 function canonicalFY(raw){
@@ -534,13 +596,12 @@ function buildDonorStats(){
 
 /* ---------- Legend & Summary ---------- */
 function renderLegend() {
-  // Ensure collapsible shell exists once
   const host = document.getElementById('legend');
   if (host && !document.getElementById('legendDetails')) {
     host.innerHTML = `
-      <details id="legendDetails" open>
+      <details id="legendDetails">
         <summary class="legend-summary">Legend</summary>
-        <div id="legendBody"></div>
+        <div id="legendBody" class="legend-body"></div>
       </details>`;
   }
   const body = document.getElementById('legendBody');
@@ -562,7 +623,15 @@ function renderLegend() {
     ${vis('blr-line')  ? '<div class="legend-item"><span class="legend-line" style="border-top-color:#1255d7"></span> Bengaluru Urban District</div>' : ''}
     ${vis('bbmp-line') ? '<div class="legend-item"><span class="legend-line" style="border-top-color:#e11d48"></span> BBMP Boundary</div>' : ''}
     ${vis('zones-line')? '<div class="legend-item"><span class="legend-line" style="border-top-color:#0e7490"></span> Zones</div>' : ''}
-    <div class="legend-item"><span class="legend-dot" style="background:#999"></span> Percolation well locations</div>
+    <div class="legend-item">
+    <div class="legend-dot-group">
+      <span class="legend-dot" style="background:#28a745"></span>
+      <span class="legend-dot" style="background:#007bff"></span>
+      <span class="legend-dot" style="background:#dc3545"></span>
+      <span class="legend-dot" style="background:#ffc107"></span>
+    </div>
+    <span class="legend-label">Percolation well locations</span>
+  </div>
   `;
 
   // Donors list (sorted)
@@ -581,9 +650,6 @@ function renderLegend() {
     <div class="legend-scroll">${donorsHTML}</div>
   `;
 }
-
-
-
 
 function updateSummaryCard(){
   const donor = document.getElementById('donorSel').value || 'Donors';
@@ -615,7 +681,6 @@ function updateSummaryCard(){
       </span>
     `;
   }
-
 
   document.getElementById('countLoc').innerHTML   = `Locations : <span class="num">${totalL}</span>`;
   document.getElementById('countWells').innerHTML = `Wells : <span class="num">${totalW}</span>`;
@@ -797,7 +862,6 @@ async function addHydrologyLayers(){
     .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','none'); });
 }
 
-
 /* Show/hide hydrology layers */
 function setHydrologyVisible(show){
   const v = show ? 'visible' : 'none';
@@ -816,7 +880,6 @@ function setHydrologyVisible(show){
 
   renderLegend();
 }
-
 
 /* ---------- Zones visibility & filtering ---------- */
 function toggleAdminVisibility(show){
@@ -1070,7 +1133,6 @@ function showLocationWells(locationName, geom){
   return false;
 }
 
-
 /* ---------- Map init ---------- */
 function initMap(){
   map=new mapboxgl.Map({ container:'map', style:'mapbox://styles/mapbox/streets-v12', center:[77.59,12.97], zoom:9.5 });
@@ -1191,7 +1253,7 @@ function initMap(){
           }
         }
       });
-
+    
       // Wards (for spatial join)
       await getGeo('wards');
 
@@ -1345,5 +1407,3 @@ function initMap(){
 </script>
 </body>
 </html>
-
-
