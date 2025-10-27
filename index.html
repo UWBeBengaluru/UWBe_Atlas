@@ -636,7 +636,7 @@ function renderLegend() {
 
   // Donors list (sorted)
   const donorsSorted = [...(donorStats || new Map()).entries()]
-    .sort((a, b) => (b[1]?.totalWells || 0) - (a[1]?.totalWells || 0));
+    .sort((a, b) => a[0].localeCompare(b[0]));
   const donorsHTML = donorsSorted.map(([name, st]) => `
     <div class="legend-item" title="${name}">
       <span class="legend-dot" style="background:${st.color}"></span>
@@ -1407,5 +1407,6 @@ function initMap(){
 </script>
 </body>
 </html>
+
 
 
